@@ -2,6 +2,10 @@
 // SET09117 Edinburgh Napier University
 // Checkers
 
+// INFORMATION
+// 0 == BLACK == TOP
+// 1 == WHITE == BOTTOM
+
 #ifndef CHECKERS_H
 #define CHECKERS_H
 #endif
@@ -15,32 +19,56 @@ typedef struct
 {
     int x;
     int y; 
-} location;
+} point;
 
 class Piece{
 	private:
 		int colour;
 		bool isKing;
 		bool isCaptured;
-		location loc;
+		point location;
 
 	public:
 		// TODO: add get/set methods
-		Piece(int, location);
-		void King();
-		void Capture();
+		int getColour(){return colour;};
+		bool getKing(){return isKing;};
+		bool getCaptured(){return isCaptured;};
+		point getLocation(){return location;};
+
+		void setLocation(point loc){location = loc;};
+
+		Piece(int, point);
+		void mkKing();
+		void mkCapture();
+};
+
+class Position{
+	private:
+		Piece* piece;
+		int colour;
+	public:
+		int getColour(){return colour;};
+		Piece* getPiece(){return piece;};
+		void setPiece(Piece*);
+
+		Position(int col){colour = col;};
 };
 
 class Move{
 	private:
 		string direction;
 		int distance;
-		location dest;
+		point dest;
 		int value;
 		Piece* piece;
 
 	public:
-		// TODO: add get/set methods
-		Move(Piece*, location);
+		string getDirection(){return direction;};
+		int getDistance(){return distance;};
+		point getDestination(){return dest;};
+		int getValue(){return value;};
+		Piece* getPiece(){return piece;}
+
+		Move(Piece*, point);
 		void Play();
 };
