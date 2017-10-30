@@ -1,0 +1,39 @@
+ASCII CHECKERBOARD GAMESTATE	
+
+	   | b |   | b |   | b |   | b
+8	___|___|___|___|___|___|___|___
+	 b |   | b |   | b |   | b |
+7	___|___|___|___|___|___|___|___
+	   | b |   | b |   | b |   | b
+6	___|___|___|___|___|___|___|___
+	   |   |   |   |   |   |   |   
+5	___|___|___|___|___|___|___|___
+	   |   |   |   |   |   |   |   
+4	___|___|___|___|___|___|___|___
+	 w |   | w |   | w |   | w |   
+3	___|___|___|___|___|___|___|___
+	   | w |   | w |   | w |   | w 
+2	___|___|___|___|___|___|___|___
+	 w |   | w |   | w |   | w |   
+1	___|___|___|___|___|___|___|___
+
+     a   b   c   d   e   f   g   h
+
+Each square on the board is comprised of 6 char positions, two rows and three collumns, 
+where the letter representation of a piece is placed in the top row, centre. The borders of 
+the square are made from vertical and horizontal bars, taking up one char position each.
+
+It would make sense to render each line procedurally. 
+In order to render the board in this way, the renderer will need to be able to interperate
+the game state. It will need to be able to access the gamestate and determine piece colour, 
+and piece king status. 
+
+The second row of each square, for all of the squares in all of the position rows is always the same. This means that it can be generated easily.
+
+So, to render a row of squares, we need the piece identifier section;
+   | b |   | b |   | b |   | b 
+And the bounding box section;
+___|___|___|___|___|___|___|___
+
+The only dynamic content here is the piece identifier row, as it has the piece identifier,
+We can compile a row at a time using a loop and by fetching the infoemation from the board state.
