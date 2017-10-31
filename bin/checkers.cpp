@@ -39,10 +39,18 @@ void Piece::mkCapture()
 	location.y = -1;
 }
 
+void Position::setColour(int c)
+{
+	if(c < 0 || c > 1){
+		throw invalid_argument("Colour incicator must be 0 or 1");
+	}else{
+		colour = c;
+	}
+}
+
 void Position::setPiece(Piece* p)
 {
 	piece = p;
-
 }
 
 Move::Move(Piece* p, point d)
@@ -85,4 +93,138 @@ Move::Move(Piece* p, point d)
 		// there will be a call to an AI API here once i've written it.
 		// Evaluation will run from 1 to 5, with 1 being the worst and 5
 		// being the best.
+}
+
+Game::Game()
+{
+	// Initialise the gamestate
+	board.resize( 8, vector<Position>(8));
+
+	// Init all board locations with the correct colour
+	for(int i = 0; i < 8; i++){
+		for(int j = 0; j < 8; j++){
+			if(i % 2 == 0){
+				if(j % 2 == 0){
+					// 0
+					board[i][j].setColour(0);
+				}else{
+					// 1
+					board[i][j].setColour(1);
+				}
+			}else{
+				if(j % 2 == 0){
+					// 1
+					board[i][j].setColour(1);
+				}else{
+					// 0
+					board[i][j].setColour(0);
+				}
+			}	
+		}
+	}
+
+	// Init board with pieces on the first and last three rows.
+	for(int i = 0; i < 3; i++){
+		for(int j = 0; i < 8; i++){
+			if(board[i][j].getColour() == 0){
+				point loc;
+				loc.x = i;
+				loc.y = j;
+				board[i][j].setPiece(new Piece(0, loc));
+			}
+		}
+	}
+
+}
+
+bool Game::chkForWinner()
+{
+	// for all positions on the board, if the position has a piece, get the piece
+	// colour, if the colour has not yet been found, mark it as found.
+	bool foundBlack = false;
+	bool foundWhite = false;
+
+	for(int i = 0; i < 8; i++){
+		for(auto &j : board[i]){
+			if(j.getPiece() != NULL){
+				if(j.getPiece()->getColour() == 0){
+					foundBlack = true;
+				}else if(j.getPiece()->getColour() == 1){
+					foundWhite = true;
+				}
+			}
+			if(foundBlack || foundWhite){
+				// If both colours have been found in the middle of a search, no 
+				// need to continue searching.
+				return false;
+			}
+		}
+	}
+
+	if(foundBlack == false || foundWhite == false){
+		// One colour has not been found, someone has won.
+		return true;
+	}
+}
+
+void Game::chkForKing()
+{
+	// for each side, if there's an opponent piece at said side, and 
+	// it's not already king then make it king.
+
+	for(auto &b : board[0]){
+		// check for white pieces on black side
+		if(b.getPiece() != NULL){
+			if(b.getPiece()->getColour() == 1 && b.getPiece()->getKing() == false){
+				b.getPiece()->mkKing();
+			}
+		}
+	}
+	for(auto &w : board[7]){
+		// check for black pieces at white side
+		if(w.getPiece() != NULL){
+			if(w.getPiece()->getColour() == 0 && w.getPiece()->getKing() == false){
+				w.getPiece()->mkKing();
+			}
+		}
+	}
+}
+
+void Game::drawState()
+{
+	cout << "    A   B   C   D   E   F   G   H \n\n";
+	// Standard loop with accumulator for rendering rows
+	for(int i = 0; i < 8; i++){
+		string boxTop;
+		string topRow;
+		string bottomRow;
+		
+		for(auto &j : board[i]){
+
+			if(j.getPiece() != NULL){
+				if(j.getPiece()->getColour() == 0){
+					if(j.getPiece()->getKing()){
+						boxTop = " B ";
+					}else{
+						boxTop = " W ";
+					}
+				}else{
+					if(j.getPiece()->getKing()){
+						boxTop = " b ";
+					}else{
+						boxTop = " w ";
+					}
+				}
+			}else{
+				boxTop = "   ";
+			}
+
+			// Add box comp onto topRow and bottomRow strings
+			topRow = topRow + boxTop + '|';
+			bottomRow = bottomRow + "___" + '|';
+		}
+		// Render full row
+		cout << "   " << topRow << "\n";
+		cout << " " << i+1 << " " << bottomRow << "\n";
+	}
 }

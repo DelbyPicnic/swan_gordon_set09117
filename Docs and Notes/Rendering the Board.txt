@@ -1,4 +1,4 @@
-ASCII CHECKERBOARD GAMESTATE	
+ASCII CHECKERBOARD GAMESTATE
 
 	   | b |   | b |   | b |   | b
 8	___|___|___|___|___|___|___|___

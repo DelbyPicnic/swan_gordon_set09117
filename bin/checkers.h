@@ -21,6 +21,7 @@ typedef struct
     int y; 
 } point;
 
+
 class Piece{
 	private:
 		int colour;
@@ -49,9 +50,8 @@ class Position{
 	public:
 		int getColour(){return colour;};
 		Piece* getPiece(){return piece;};
+		void setColour(int);
 		void setPiece(Piece*);
-
-		Position(int col){colour = col;};
 };
 
 class Move{
@@ -71,4 +71,16 @@ class Move{
 
 		Move(Piece*, point);
 		void Play();
+};
+
+class Game{
+	private:
+		vector< vector<Position> > board;
+		bool isWinner;
+	public:
+		Game();
+		bool chkForWinner();
+		void chkForKing();
+		void drawState();
+		// getMoves, rewind, ff, end, save, load
 };

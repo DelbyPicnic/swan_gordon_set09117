@@ -14,6 +14,32 @@
 
 using namespace std;
 
+void drawBoard(vector< vector<int> > board)
+{
+	// Rendering the game grid
+	
+	cout << "    A   B   C   D   E   F   G   H \n\n";
+	// Standard loop with accumulator for rendering rows
+	for(int i = 0; i < 8; i++){
+		string boxTop;
+		string topRow;
+		string bottomRow;
+		
+		for(auto &j : board[i]){
+			boxTop = " " + to_string(j) + " ";
+
+			// Add box comp onto topRow and bottomRow strings
+			topRow = topRow + boxTop + '|';
+			bottomRow = bottomRow + "___" + '|';
+
+		}
+		// Render full row
+		cout << "   " << topRow << "\n";
+		cout << " " << i+1 << " " << bottomRow << "\n";
+	}
+
+}
+
 int main(int argv, char* argc[])
 {	
 	vector< vector<int> > board(8, vector<int>(8));
@@ -41,22 +67,6 @@ int main(int argv, char* argc[])
 		}
 	}
 
-	// Rendering the game grid
-	string boxTop ("   ");
-	string boxBottom ("___");
-
-	for(auto &i : board){
-		string topRow;
-		string bottomRow;
-		
-		for(auto &j : board[0]){
-			// Add box comp onto topRow and bottomRow strings
-			topRow = topRow + boxTop + '|';
-			bottomRow = bottomRow + boxBottom + '|';
-		}
-		// Render full row
-		cout << topRow << "\n";
-		cout << bottomRow << "\n";
-	}
-
+	drawBoard(board);
+	
 }

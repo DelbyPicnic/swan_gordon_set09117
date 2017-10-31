@@ -12,16 +12,15 @@
 #include "checkers.h"
 
 using namespace std;
+// TEMP - Moving this into a class
+// Modify this function to accept a 2D vector of postions (possibly a pointer to)
+
 
 int main(int argv, char* argc[])
 {	
-	point loc;
-	loc.x = 1;
-	loc.y = 1;
 
-	Position* pos = new Position(1);
-	Piece* pie = new Piece(1, loc);
-	pos->setPiece(pie);
+	Position* pos = new Position();
 
-	cout << pos->getPiece()->getLocation().x << endl;
+	Game* m_game = new Game();
+	m_game->drawState();
 }
