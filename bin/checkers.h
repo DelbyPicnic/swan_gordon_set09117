@@ -82,5 +82,6 @@ class Game{
 		bool chkForWinner();
 		void chkForKing();
 		void drawState();
+		void testState();
 		// getMoves, rewind, ff, end, save, load
 };

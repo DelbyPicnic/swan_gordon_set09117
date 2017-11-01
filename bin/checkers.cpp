@@ -106,18 +106,18 @@ Game::Game()
 			if(i % 2 == 0){
 				if(j % 2 == 0){
 					// 0
-					board[i][j].setColour(0);
+					board[j][i].setColour(1);
 				}else{
 					// 1
-					board[i][j].setColour(1);
+					board[j][i].setColour(0);
 				}
 			}else{
 				if(j % 2 == 0){
 					// 1
-					board[i][j].setColour(1);
+					board[j][i].setColour(0);
 				}else{
 					// 0
-					board[i][j].setColour(0);
+					board[j][i].setColour(1);
 				}
 			}	
 		}
@@ -125,16 +125,25 @@ Game::Game()
 
 	// Init board with pieces on the first and last three rows.
 	for(int i = 0; i < 3; i++){
-		for(int j = 0; i < 8; i++){
+		for(int j = 0; j < 8; j++){
 			if(board[i][j].getColour() == 0){
 				point loc;
-				loc.x = i;
-				loc.y = j;
+				loc.x = j;
+				loc.y = i;
 				board[i][j].setPiece(new Piece(0, loc));
 			}
 		}
 	}
-
+	for(int i = 5; i < 8; i++){
+		for(int j = 0; j < 8; j++){
+			if(board[i][j].getColour() == 0){
+				point loc;
+				loc.x = j;
+				loc.y = i;
+				board[i][j].setPiece(new Piece(1, loc));
+			}
+		}
+	}
 }
 
 bool Game::chkForWinner()
@@ -206,11 +215,11 @@ void Game::drawState()
 					if(j.getPiece()->getKing()){
 						boxTop = " B ";
 					}else{
-						boxTop = " W ";
+						boxTop = " b ";
 					}
 				}else{
 					if(j.getPiece()->getKing()){
-						boxTop = " b ";
+						boxTop = " W ";
 					}else{
 						boxTop = " w ";
 					}
@@ -226,5 +235,21 @@ void Game::drawState()
 		// Render full row
 		cout << "   " << topRow << "\n";
 		cout << " " << i+1 << " " << bottomRow << "\n";
+	}
+}
+
+void Game::testState(){
+	for(int i = 0; i < 8; i++){
+		for(int j = 0; j < 8; j++){
+			cout << i << j << " " << board[i][j].getColour() << endl;
+		}
+	}
+	cout << "<------------>" << endl;
+	for(int i = 0; i < 8; i++){
+		for(int j = 0; j < 8; j++){
+			if(board[i][j].getPiece() != NULL){
+				cout << i << j << " " << board[i][j].getPiece()->getColour() << endl;
+			}
+		}
 	}
 }
