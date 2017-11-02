@@ -77,11 +77,15 @@ class Game{
 	private:
 		vector< vector<Position> > board;
 		bool isWinner;
+		int gameMode;
+		int p_turn = 0;
 	public:
 		Game();
+		void initGame();
 		bool chkForWinner();
 		void chkForKing();
+		Move* getUsrInput();
 		void drawState();
-		void testState();
-		// getMoves, rewind, ff, end, save, load
+		void testState(); //TEMP - DO NOT DISTRIBUTE
+		// getMoves, rewind, ff, end
 };

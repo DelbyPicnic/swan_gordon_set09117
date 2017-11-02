@@ -97,6 +97,43 @@ Move::Move(Piece* p, point d)
 
 Game::Game()
 {
+	// Draw welcome message for user
+	cout << "\n\nC++ Checkers Framework. (C)2017 Gordon Swan.\nSET09117 - Algorithms and Data Structures\n\n" << endl;
+
+	bool notSelected = true;
+
+	while(notSelected){
+		// Get game type information
+		cout << "OPTIONS: (Enter a Number)\n[1] Player vs Player\n[2] Player vs Computer\n[3] Computer vs Computer\n[4] Quit\n" << endl;
+		string usrInp;
+		getline(cin,usrInp);
+
+		try{
+			switch(stoi(usrInp, nullptr, 10)){
+				case 1: gameMode = 1;
+						notSelected = false;
+						cout << "Gamemode One Selected...\n" << endl;
+						break;
+				case 2: gameMode = 2;
+						notSelected = false;
+						cout << "Gamemode Two Selected...\n" << endl;
+						break;
+				case 3: gameMode = 3;
+						notSelected = false;
+						cout << "Gamemode Three Selected...\n" << endl;
+						break;
+				case 4: cout << "Goodbye" << endl;
+						exit(0);
+						break;
+			}
+		}catch(...){
+			cout << "Please enter a number... (Argument Exception)\n" << endl;
+		}
+	}
+}
+
+void Game::initGame()
+{
 	// Initialise the gamestate
 	board.resize( 8, vector<Position>(8));
 
@@ -174,6 +211,7 @@ bool Game::chkForWinner()
 		// One colour has not been found, someone has won.
 		return true;
 	}
+	return false; // 'May reach end of non-void function' warning prevention 
 }
 
 void Game::chkForKing()
@@ -197,6 +235,16 @@ void Game::chkForKing()
 			}
 		}
 	}
+}
+
+Move* Game::getUsrInput()
+{
+	// TEMP - FOR COMPILER SAKE
+	point loc;
+	loc.x = 3;
+	loc.y = 2;
+	Move* mv = new Move(board[2][1].getPiece(), loc);
+	return mv;
 }
 
 void Game::drawState()
@@ -238,6 +286,7 @@ void Game::drawState()
 	}
 }
 
+// TEMP - DO NOT DISTRIBUTE
 void Game::testState(){
 	for(int i = 0; i < 8; i++){
 		for(int j = 0; j < 8; j++){

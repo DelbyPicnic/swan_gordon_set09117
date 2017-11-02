@@ -18,9 +18,21 @@ using namespace std;
 
 int main(int argv, char* argc[])
 {	
+	// Create new instance of game
+	// Init new game
+	// Create gameloop (MUST NOT DIE)
+	// Parse user input
 
-	Position* pos = new Position();
+	// System Loop: Will start a new game should the Game Loop die
+	while(true){
+		Game* m_game = new Game();
+		m_game->initGame();
 
-	Game* m_game = new Game();
-	m_game->drawState();
+		// Game Loop: Will collect user input and update the GUI
+		while(true){
+			m_game->drawState();
+			m_game->getUsrInput();
+			break; //TEMP
+		}
+	}
 }
