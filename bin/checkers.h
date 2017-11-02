@@ -70,7 +70,6 @@ class Move{
 		Piece* getPiece(){return piece;}
 
 		Move(Piece*, point);
-		void Play();
 };
 
 class Game{
@@ -79,12 +78,16 @@ class Game{
 		bool isWinner;
 		int gameMode;
 		int p_turn = 0;
+		vector<Move> getMoves();
+		vector<Move> getMoves(Piece*);
+
 	public:
 		Game();
 		void initGame();
 		bool chkForWinner();
 		void chkForKing();
 		Move* getUsrInput();
+		void playMove(Move*);
 		void drawState();
 		void testState(); //TEMP - DO NOT DISTRIBUTE
 		// getMoves, rewind, ff, end

@@ -31,7 +31,9 @@ int main(int argv, char* argc[])
 		// Game Loop: Will collect user input and update the GUI
 		while(true){
 			m_game->drawState();
-			m_game->getUsrInput();
+			m_game->playMove(m_game->getUsrInput());
+			m_game->drawState();
+
 			break; //TEMP
 		}
 	}

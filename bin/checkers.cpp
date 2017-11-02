@@ -132,6 +132,18 @@ Game::Game()
 	}
 }
 
+// Find all moves for all pieces of a particular side and return as a vector 
+vector<Move> Game::getMoves()
+{
+	//use push backs
+}
+
+// Find all moves for a specified piece and return as a vector
+vector<Move> Game::getMoves(Piece* p)
+{
+	//use push backs
+}
+
 void Game::initGame()
 {
 	// Initialise the gamestate
@@ -241,10 +253,23 @@ Move* Game::getUsrInput()
 {
 	// TEMP - FOR COMPILER SAKE
 	point loc;
-	loc.x = 3;
-	loc.y = 2;
+	loc.x = 2;
+	loc.y = 3;
 	Move* mv = new Move(board[2][1].getPiece(), loc);
 	return mv;
+}
+
+void Game::playMove(Move* m)
+{
+	point curPos = m->getPiece()->getLocation();
+	point newPos = m->getDestination();
+
+	if(board[newPos.y][newPos.x].getPiece() == NULL){
+		board[newPos.y][newPos.x].setPiece(board[curPos.y][curPos.x].getPiece());
+		board[curPos.y][curPos.x].setPiece(NULL);
+	}else{
+		throw invalid_argument("Invalid move detected: Destination is occupied");
+	}
 }
 
 void Game::drawState()
