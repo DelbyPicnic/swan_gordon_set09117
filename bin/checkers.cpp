@@ -9,7 +9,9 @@
 #include "checkers.h"
 #include <iostream>
 #include <vector>
+#include <tuple>
 #include <string>
+#include <locale>
 
 using namespace std;
 
@@ -53,14 +55,15 @@ void Position::setPiece(Piece* p)
 	piece = p;
 }
 
-Move::Move(Piece* p, point d)
+Move::Move(Piece* p, point l, point d)
 {
 	piece = p;
+	location = l;
 	dest = d;
 
 	// Distance must be calculated
-	int dx = (piece->getLocation().x - dest.x) * 1;
-	int dy = (piece->getLocation().y - dest.y) * 1;
+	int dx = abs(location.x - dest.x);
+	int dy = abs(location.y - dest.y);
 	if(dx == dy){
 		if(dx < 3 && dx > 0){
 			distance = dx;
@@ -82,13 +85,53 @@ Move::Move(Piece* p, point d)
 		if(y > 0){direction = "FORWARD";}
 		else if(y < 0){direction = "BACKWARD";}
 	}
-	// Validate the movement
-	if(direction == "BACKWARD" && piece->getKing() == false){
-		throw invalid_argument("Only King pieces may move backward");
-	}
 
 	// Request a value for this move from the AI
 	value = 1; // TEMP
+		// Move evaluation will be bolted on at a later stage, 
+		// there will be a call to an AI API here once i've written it.
+		// Evaluation will run from 1 to 5, with 1 being the worst and 5
+		// being the best.
+}
+
+Move::Move(Piece* p, Piece* c, point l, point d)
+{
+	piece = p;
+	capture = c;
+	location = l;
+	dest = d;
+
+	// Distance must be calculated
+	int dx = abs(location.x - dest.x);
+	int dy = abs(location.y - dest.y);
+	if(dx == dy){
+		if(dx < 3 && dx > 2){
+			distance = dx;
+		}else{
+			throw invalid_argument("Move displacement is incorrect for the type of move");
+		}
+	}else{
+		throw invalid_argument("Movement is not diagonal");
+	}
+
+	// Calculate Relative Direction
+	int y = (piece->getLocation().y - dest.y);
+
+	if(piece->getColour() == 0){
+		// Piece is black
+		// Relative forward is down / negative y
+		if(y < 0){direction = "FORWARD";}
+		else if(y > 0){direction = "BACKWARD";}
+	}
+	else if(piece->getColour() == 1){
+		// Piece is white
+		// Relative forward direction is up / posative y
+		if(y > 0){direction = "FORWARD";}
+		else if(y < 0){direction = "BACKWARD";}
+	}
+
+	// Request a value for this move from the AI
+	value = 2; // TEMP
 		// Move evaluation will be bolted on at a later stage, 
 		// there will be a call to an AI API here once i've written it.
 		// Evaluation will run from 1 to 5, with 1 being the worst and 5
@@ -133,16 +176,110 @@ Game::Game()
 }
 
 // Find all moves for all pieces of a particular side and return as a vector 
-vector<Move> Game::getMoves()
+vector<Move*> Game::getMoves()
 {
-	//use push backs
+	vector<Move*> moves;
+
+	// Declare all offsets, this could be neater...
+	point a; a.x = -1; a.y = -1;
+	point b; b.x = -1; b.y = 1;
+	point c; c.x = 1; c.y = -1;
+	point d; d.x = 1; d.y = 1;
+	// Add points to iteratable
+	point offset [] = {a, b, c, d};
+
+	for(int i = 0; i < 8; i++){
+		for(auto &j : board[i]){
+			if(j.getPiece() != NULL){
+				if(j.getPiece()->getColour() == p_turn){
+					Piece* p = j.getPiece();
+					point loc = p->getLocation();
+
+					for(auto &off : offset){
+						point offs_loc;
+						offs_loc.x = (loc.x + off.x);
+						offs_loc.y = (loc.y + off.y); 
+
+ 						if(offs_loc.x > 7 || offs_loc.x < 0 || offs_loc.y > 7 || offs_loc.y < 0){
+ 							continue;
+ 						}
+
+						if(board[offs_loc.y][offs_loc.x].getPiece() == NULL){
+							//regular move is available
+							Move* regMove = new Move(p, loc, offs_loc);
+							moves.push_back(regMove);
+
+						}else if(board[loc.y + off.y][loc.x + off.x].getPiece()->getColour() != p_turn && board[loc.y + (off.y*2)][loc.x + (off.x*2)].getPiece() == NULL){
+							//jump move is availabe
+							// Get piece to capture
+							Piece* c = board[loc.y + off.y][loc.x + off.x].getPiece();
+							// Get double offset point
+							point jmp_offs;
+							jmp_offs.x = loc.x + (off.x*2);
+							jmp_offs.y = loc.y + (off.y*2);
+
+							Move* jmpMove = new Move(p, c, loc, jmp_offs);
+							moves.push_back(jmpMove);
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	/*
+	// TEMP
+	for(auto &m : moves){
+		cout << m->getLocation().x << "," << m->getLocation().y << " to " << m->getDestination().x << "," << m->getDestination().y << endl;
+	}
+	*/
+	
+	return moves;
+}
+point Game::getUsrInput(){
+	bool isValid = false;
+	string usrIn;
+	string cols = "abcdefgh";
+	point p_pos;
+
+	while(!isValid){
+		getline(cin, usrIn);
+		if(usrIn.size() == 2){
+			if(isalpha(usrIn[0])){
+				char xVal = tolower(usrIn[0], locale());
+				auto xpos = cols.find(xVal);
+				if(xpos != string::npos){
+					p_pos.x = xpos;
+				}else{
+					cout << "Column not found or is out of range." << endl;
+				}
+			}else{
+				cout << "Column value is invalid." << endl;
+			}
+			if(isdigit(usrIn[1])){
+				int val = usrIn[1] - '0';
+				val--;
+				if(val < 0 || val > 7){
+					cout << "Row value is out of range." << endl;
+				}else{
+					p_pos.y = val;
+				}
+			}else{
+				cout << "Row value is invalid." << endl;
+			}
+		}else{
+			cout << "Input shoud be exactly two characters long." << endl;
+		}
+		
+		if(p_pos.x <= 7 && p_pos.x >= 0){
+			if(p_pos.x <= 7 && p_pos.x >= 0){
+				isValid = true;
+			}
+		}
+	}
+	return p_pos;
 }
 
-// Find all moves for a specified piece and return as a vector
-vector<Move> Game::getMoves(Piece* p)
-{
-	//use push backs
-}
 
 void Game::initGame()
 {
@@ -249,23 +386,41 @@ void Game::chkForKing()
 	}
 }
 
-Move* Game::getUsrInput()
+Move* Game::getNextMove()
 {
-	// TEMP - FOR COMPILER SAKE
-	point loc;
-	loc.x = 2;
-	loc.y = 3;
-	Move* mv = new Move(board[2][1].getPiece(), loc);
-	return mv;
+	string usrInp;	
+	if(gameMode == 1){
+		if(p_turn == 0){
+			cout << "Black Turn - Player 1" << endl;
+			point p_cur = this->getUsrInput();
+			
+		}else{
+			cout << "White Turn - Player 2" << endl;
+		}
+	}else if(gameMode == 2){
+		if(p_turn == 0){
+			cout << "Black Turn - Computer" << endl;
+		}else{
+			cout << "White Turn - Player 1" << endl;
+		}
+	}else if(gameMode == 3){
+		if(p_turn == 0){
+			cout << "Black Turn - Computer" << endl;
+		}else{
+			cout << "White Turn - Computer" << endl;
+		}
+	}
+	
 }
 
 void Game::playMove(Move* m)
 {
-	point curPos = m->getPiece()->getLocation();
+	point curPos = m->getLocation();
 	point newPos = m->getDestination();
 
 	if(board[newPos.y][newPos.x].getPiece() == NULL){
 		board[newPos.y][newPos.x].setPiece(board[curPos.y][curPos.x].getPiece());
+		board[newPos.y][newPos.x].getPiece()->setLocation(m->getDestination());
 		board[curPos.y][curPos.x].setPiece(NULL);
 	}else{
 		throw invalid_argument("Invalid move detected: Destination is occupied");

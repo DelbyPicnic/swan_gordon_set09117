@@ -58,18 +58,24 @@ class Move{
 	private:
 		string direction;
 		int distance;
+		point location;
 		point dest;
 		int value;
 		Piece* piece;
+		Piece* capture;
 
 	public:
 		string getDirection(){return direction;};
 		int getDistance(){return distance;};
 		point getDestination(){return dest;};
+		point getLocation(){return location;};
 		int getValue(){return value;};
 		Piece* getPiece(){return piece;}
+		Piece* getCapture(){return capture;};
 
-		Move(Piece*, point);
+		Move(Piece*, point, point);
+		Move(Piece*, Piece*, point, point);
+
 };
 
 class Game{
@@ -78,15 +84,15 @@ class Game{
 		bool isWinner;
 		int gameMode;
 		int p_turn = 0;
-		vector<Move> getMoves();
-		vector<Move> getMoves(Piece*);
-
+		vector<Move*> getMoves();
+		point getUsrInput();
+		
 	public:
 		Game();
 		void initGame();
 		bool chkForWinner();
 		void chkForKing();
-		Move* getUsrInput();
+		Move* getNextMove();
 		void playMove(Move*);
 		void drawState();
 		void testState(); //TEMP - DO NOT DISTRIBUTE
