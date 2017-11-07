@@ -15,10 +15,11 @@
 using namespace std;
 
 // Type for storing the xy coordin
-typedef struct
+typedef struct point
 {
     int x;
     int y; 
+
 } point;
 
 
@@ -82,8 +83,9 @@ class Game{
 	private:
 		vector< vector<Position> > board;
 		bool isWinner;
-		int gameMode;
-		int p_turn = 0;
+		int gameMode;   // What game ode is selected?
+		int p_turn = 0;	// Whos turn is it?
+		bool use_ai = false; // Should the AI be used to determine this move?
 		vector<Move*> getMoves();
 		point getUsrInput();
 		
@@ -96,5 +98,5 @@ class Game{
 		void playMove(Move*);
 		void drawState();
 		void testState(); //TEMP - DO NOT DISTRIBUTE
-		// getMoves, rewind, ff, end
+		// rewind, ff, end
 };

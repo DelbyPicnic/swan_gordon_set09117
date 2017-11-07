@@ -15,6 +15,53 @@
 
 using namespace std;
 
+// Define comparitor functionality between points and other types.
+bool operator == (const point &p1, const point &p2)
+{
+	if(p1.x == p2.x && p1.y == p2.y){
+		return true;
+	}else{
+		return false;
+	}
+}
+bool operator < (const point &p1, const int val)
+{
+	if(p1.x < val || p1.y < val){
+		return true;
+	}else{
+		return false;
+	}
+}
+bool operator > (const point &p1, const int val)
+{
+	if(p1.x > val || p1.y > val){
+		return true;
+	}else{
+		return false;
+	}
+}
+point operator + (const point &p1, const int val)
+{
+	point nPoint;
+	nPoint.x = p1.x + val;
+	nPoint.y = p1.y + val;
+	return nPoint;
+}
+point operator + (const point &p1, const point &p2)
+{
+	point nPoint;
+	nPoint.x = p1.x + p2.x;
+	nPoint.y = p1.y + p2.y;
+	return nPoint;
+}
+point operator * (const point &p1, const int val)
+{
+	point nPoint;
+	nPoint.x = p1.x * val;
+	nPoint.y = p1.y * val;
+	return nPoint;
+}
+
 Piece::Piece(int col, point loc)
 {
 	// Ensure that the colour value is within the correct range
@@ -101,6 +148,8 @@ Move::Move(Piece* p, Piece* c, point l, point d)
 	location = l;
 	dest = d;
 
+	cout << location.x << "," << location.y << " " << dest.x << "," << dest.y <<endl;
+
 	// Distance must be calculated
 	int dx = abs(location.x - dest.x);
 	int dy = abs(location.y - dest.y);
@@ -163,6 +212,7 @@ Game::Game()
 						break;
 				case 3: gameMode = 3;
 						notSelected = false;
+						use_ai = true;
 						cout << "Gamemode Three Selected...\n" << endl;
 						break;
 				case 4: cout << "Goodbye" << endl;
@@ -197,10 +247,9 @@ vector<Move*> Game::getMoves()
 
 					for(auto &off : offset){
 						point offs_loc;
-						offs_loc.x = (loc.x + off.x);
-						offs_loc.y = (loc.y + off.y); 
+						offs_loc = loc + off; 
 
- 						if(offs_loc.x > 7 || offs_loc.x < 0 || offs_loc.y > 7 || offs_loc.y < 0){
+ 						if(offs_loc > 7 || offs_loc < 0){
  							continue;
  						}
 
@@ -208,6 +257,7 @@ vector<Move*> Game::getMoves()
 							//regular move is available
 							Move* regMove = new Move(p, loc, offs_loc);
 							moves.push_back(regMove);
+							cout << "Added move: " << loc.x << "," << loc.y << " -> " << offs_loc.x << "," << offs_loc.y << endl; 
 
 						}else if(board[loc.y + off.y][loc.x + off.x].getPiece()->getColour() != p_turn && board[loc.y + (off.y*2)][loc.x + (off.x*2)].getPiece() == NULL){
 							//jump move is availabe
@@ -215,9 +265,13 @@ vector<Move*> Game::getMoves()
 							Piece* c = board[loc.y + off.y][loc.x + off.x].getPiece();
 							// Get double offset point
 							point jmp_offs;
-							jmp_offs.x = loc.x + (off.x*2);
-							jmp_offs.y = loc.y + (off.y*2);
+							jmp_offs = loc + (off*2);
 
+							if(jmp_offs > 7 || jmp_offs < 0){
+	 							continue;
+	 						}
+
+							cout << "Added move: " << loc.x << "," << loc.y << " -> " << jmp_offs.x << "," << jmp_offs.y << endl; 
 							Move* jmpMove = new Move(p, c, loc, jmp_offs);
 							moves.push_back(jmpMove);
 						}
@@ -387,30 +441,52 @@ void Game::chkForKing()
 }
 
 Move* Game::getNextMove()
-{
-	string usrInp;	
-	if(gameMode == 1){
-		if(p_turn == 0){
-			cout << "Black Turn - Player 1" << endl;
-			point p_cur = this->getUsrInput();
-			
-		}else{
-			cout << "White Turn - Player 2" << endl;
-		}
-	}else if(gameMode == 2){
-		if(p_turn == 0){
-			cout << "Black Turn - Computer" << endl;
-		}else{
-			cout << "White Turn - Player 1" << endl;
-		}
-	}else if(gameMode == 3){
-		if(p_turn == 0){
-			cout << "Black Turn - Computer" << endl;
-		}else{
-			cout << "White Turn - Computer" << endl;
+{	vector<Move*> allMoves = this->getMoves();
+	vector<Move*> plMoves;
+	bool cMoveF = false;
+
+	for(auto &m : allMoves){
+		if(m->getCapture() != NULL){
+			plMoves.push_back(m);
+			cMoveF = true;
+			//cout << "Found a capture move: " << m->getLocation().x << m->getLocation().y << m->getDestination().x << m->getDestination().y << endl;
 		}
 	}
-	
+	if(!cMoveF){
+		for(auto &m : allMoves){
+			if(m->getCapture() == NULL){
+				plMoves.push_back(m);
+			}
+			//cout << "Found a regular move: " << m->getLocation().x << m->getLocation().y << m->getDestination().x << m->getDestination().y << endl;
+		}
+	}
+
+	// Display whos turn it is
+	if(p_turn == 0){
+		cout << "Black Turn";
+	}else{
+		cout << "White Turn";
+	}
+	// Display who is playing (computer/user) && Get input from correct source
+	if(use_ai){
+		cout << " - Computer" << endl;
+		// Get input from AI
+	}else{
+		cout << " - Player" <<endl;
+		while(true){
+			point p_loc = this->getUsrInput();
+			point p_dest = this->getUsrInput();
+
+			for(auto &m : plMoves){
+				if(p_loc == m->getLocation() && p_dest == m->getDestination()){
+					if(m->getDirection() == "FORWARD" || m->getPiece()->getKing() == true){
+						return m;
+					}
+				}
+			}
+			cout << "Not a playable move. Enter a valid move." << endl;
+		}
+	}
 }
 
 void Game::playMove(Move* m)
@@ -425,6 +501,8 @@ void Game::playMove(Move* m)
 	}else{
 		throw invalid_argument("Invalid move detected: Destination is occupied");
 	}
+	//detect for more available moves here later
+
 }
 
 void Game::drawState()
