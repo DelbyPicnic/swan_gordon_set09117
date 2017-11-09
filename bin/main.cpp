@@ -32,6 +32,11 @@ int main(int argv, char* argc[])
 		while(true){
 			m_game->drawState();
 			m_game->playMove(m_game->getNextMove());
+			m_game->chkForKing();
+			if(m_game->chkForWinner()){
+				cout << "WINRAR!" << endl;
+				break;
+			}
 		}
 	}
 }

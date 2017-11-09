@@ -82,12 +82,14 @@ class Move{
 class Game{
 	private:
 		vector< vector<Position> > board;
+		vector<Move*> m_history;
+		int state_index;
 		bool isWinner;
 		int gameMode;   // What game ode is selected?
 		int p_turn = 0;	// Whos turn is it?
 		bool use_ai = false; // Should the AI be used to determine this move?
 		vector<Move*> getMoves();
-		point getUsrInput();
+		point parseUsrInput(string);
 		
 	public:
 		Game();
@@ -98,5 +100,6 @@ class Game{
 		void playMove(Move*);
 		void drawState();
 		void testState(); //TEMP - DO NOT DISTRIBUTE
-		// rewind, ff, end
+		void rewindState();
+		// ff, end
 };
