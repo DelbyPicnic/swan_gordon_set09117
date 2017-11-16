@@ -693,7 +693,8 @@ void Game::autoPlay(){
 void Game::autoSelect(){
 	vector<Move*> allMoves = this->getMoves();
 	if(allMoves.size() > 0){
-		this->playMove(allMoves[0]);
+		int rndSel = rand() % allMoves.size();
+		this->playMove(allMoves[rndSel]);
 	}else{
 		cout << "Couldn't select a move as there's no moves available" << endl;
 	}

@@ -92,8 +92,9 @@ int main(int argv, char* argc[])
 				}
 				m_game->chkForKing();
 				if(m_game->chkForWinner()){
-					cout << "WINRAR" << endl;
-					break;
+					cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+					cout << "!!!!!!!!!!!W I N R A R!!!!!!!!!!!" << endl;
+					cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
 				}
 			}
 		}
