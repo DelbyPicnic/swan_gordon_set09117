@@ -95,6 +95,8 @@ class Game{
 		bool use_ai = false; // Should the AI be used to determine this move?
 		
 	public:
+		bool usingAI(){return use_ai;};
+
 		Game();
 		void initGame();
 		bool chkForWinner();
