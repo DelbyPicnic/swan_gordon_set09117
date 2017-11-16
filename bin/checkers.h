@@ -22,6 +22,12 @@ typedef struct point
 
 } point;
 
+bool operator == (const point &p1, const point &p2);
+bool operator < (const point &p1, const int val);
+bool operator > (const point &p1, const int val);
+point operator + (const point &p1, const int val);
+point operator + (const point &p1, const point &p2);
+point operator * (const point &p1, const int val);
 
 class Piece{
 	private:
@@ -76,7 +82,6 @@ class Move{
 
 		Move(Piece*, point, point);
 		Move(Piece*, Piece*, point, point);
-
 };
 
 class Game{
@@ -88,18 +93,20 @@ class Game{
 		int gameMode;   // What game ode is selected?
 		int p_turn = 0;	// Whos turn is it?
 		bool use_ai = false; // Should the AI be used to determine this move?
-		vector<Move*> getMoves();
-		point parseUsrInput(string);
 		
 	public:
 		Game();
 		void initGame();
 		bool chkForWinner();
 		void chkForKing();
-		Move* getNextMove();
+		vector<Move*> getMoves();
+		point getUsrInput();
 		void playMove(Move*);
 		void drawState();
-		void testState(); //TEMP - DO NOT DISTRIBUTE
 		void rewindState();
-		// ff, end
+		void redoState();
+		void autoPlay();
+		void autoSelect();
 };
+
+int evaluateMove(Move*);

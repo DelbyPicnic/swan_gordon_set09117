@@ -7,6 +7,7 @@
 // 1 == WHITE == BOTTOM
 
 #include "checkers.h"
+#include <stdlib.h>
 #include <iostream>
 #include <vector>
 #include <tuple>
@@ -135,10 +136,10 @@ Move::Move(Piece* p, point l, point d)
 
 	// Request a value for this move from the AI
 	value = 1; // TEMP
-		// Move evaluation will be bolted on at a later stage, 
-		// there will be a call to an AI API here once i've written it.
-		// Evaluation will run from 1 to 5, with 1 being the worst and 5
-		// being the best.
+	// Move evaluation will be bolted on at a later stage, 
+	// there will be a call to an AI API here once i've written it.
+	// Evaluation will run from 1 to 5, with 1 being the worst and 5
+	// being the best.
 }
 
 Move::Move(Piece* p, Piece* c, point l, point d)
@@ -223,126 +224,11 @@ Game::Game()
 	}
 }
 
-// Find all moves for all pieces of a particular side and return as a vector 
-vector<Move*> Game::getMoves()
-{
-	vector<Move*> moves;
-
-	// Declare all offsets, this could be neater...
-	point a; a.x = -1; a.y = -1;
-	point b; b.x = -1; b.y = 1;
-	point c; c.x = 1; c.y = -1;
-	point d; d.x = 1; d.y = 1;
-	// Add points to iteratable
-	point offset [] = {a, b, c, d};
-
-	for(int i = 0; i < 8; i++){
-		for(auto &j : board[i]){
-			if(j.getPiece() != NULL){
-				if(j.getPiece()->getColour() == p_turn){
-					Piece* p = j.getPiece();
-					point loc = p->getLocation();
-
-					cout << "...Starting move detect" << endl;
-					for(auto &off : offset){
-						point offs_loc;
-						offs_loc = loc + off; 
-
- 						if(offs_loc > 7 || offs_loc < 0){
- 							continue;
- 						}
-						
-						if(board[offs_loc.y][offs_loc.x].getPiece() == NULL){
-							cout << "...Detecting reg move" << endl;
-							Move* regMove = new Move(p, loc, offs_loc);
-							if(regMove->getDirection() == "FORWARD" || regMove->getPiece()->getKing() == true){
-								moves.push_back(regMove);
-								cout << "Added move: " << loc.x << "," << loc.y << " -> " << offs_loc.x << "," << offs_loc.y << endl; 
-							}
-
-						}else{
-							point jmp_offs;
-							jmp_offs = loc + (off*2);
-
-							if(jmp_offs > 7 || jmp_offs < 0){
-								continue;
-							}
-							if(board[offs_loc.y][offs_loc.x].getPiece()->getColour() != p_turn && board[loc.y + (off.y*2)][loc.x + (off.x*2)].getPiece() == NULL){
-								// Get piece to capture
-								cout << "...Detecting capture move" << endl;
-								Piece* c = board[loc.y + off.y][loc.x + off.x].getPiece();
-								// Get double offset point
-
-
-								Move* jmpMove = new Move(p, c, loc, jmp_offs);
-
-								if(jmpMove->getDirection() == "FORWARD" || jmpMove->getPiece()->getKing() == true){
-									moves.push_back(jmpMove);
-									cout << "Added move: " << loc.x << "," << loc.y << " -> " << offs_loc.x << "," << offs_loc.y << endl; 
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	/*
-	// TEMP
-	for(auto &m : moves){
-		cout << m->getLocation().x << "," << m->getLocation().y << " to " << m->getDestination().x << "," << m->getDestination().y << endl;
-	}
-	*/
-	
-	return moves;
-}
-point Game::parseUsrInput(string usrIn){
-	string cols = "abcdefgh";
-	point p_pos;
-
-	if(usrIn.size() == 2){
-		if(isalpha(usrIn[0])){
-			char xVal = tolower(usrIn[0], locale());
-			auto xpos = cols.find(xVal);
-			if(xpos != string::npos){
-				p_pos.x = xpos;
-			}else{
-				throw invalid_argument("Column not found or is out of range.");
-			}
-		}else{
-			throw invalid_argument("Column value is invalid.");
-		}
-		if(isdigit(usrIn[1])){
-			int val = usrIn[1] - '0';
-			val--;
-			if(val < 0 || val > 7){
-				throw invalid_argument("Row value is out of range.");
-			}else{
-				p_pos.y = val;
-			}
-		}else{
-			throw invalid_argument("Row value is invalid.");
-		}
-	}else{
-		throw invalid_argument("Input shoud be exactly two characters long.");
-	}
-	
-	if(p_pos.x <= 7 && p_pos.x >= 0){
-		if(p_pos.y <= 7 && p_pos.y >= 0){
-			return p_pos;
-		}
-	}else{
-		throw invalid_argument("Point location is out of bounds.");
-	}
-}
-
-
 void Game::initGame()
 {
 	// Initialise the gamestate
 	board.resize( 8, vector<Position>(8));
-
+	p_turn = 0;
 	// Init all board locations with the correct colour
 	for(int i = 0; i < 8; i++){
 		for(int j = 0; j < 8; j++){
@@ -443,74 +329,122 @@ void Game::chkForKing()
 	}
 }
 
-Move* Game::getNextMove()
-{	vector<Move*> allMoves = this->getMoves();
-	vector<Move*> plMoves;
-	point p_loc;
-	point p_dest;
-	string usrInp;
-	bool cMoveF = false;
+// Find all moves for all pieces of a particular side and return as a vector 
+vector<Move*> Game::getMoves()
+{
+	vector<Move*> moves;
 
-	for(auto &m : allMoves){
-		if(m->getCapture() != NULL){
-			plMoves.push_back(m);
-			cMoveF = true;
-			cout << "Found a capture move: " << m->getLocation().x << m->getLocation().y << m->getDestination().x << m->getDestination().y << " " << m->getDistance() << endl;
-		}
-	}
-	if(!cMoveF){
-		for(auto &m : allMoves){
-			if(m->getCapture() == NULL){
-				plMoves.push_back(m);
-			}
-			cout << "Found a regular move: " << m->getLocation().x << m->getLocation().y << m->getDestination().x << m->getDestination().y << " " << m->getDistance() << endl;
-		}
-	}
+	// Declare all offsets
+	point a; a.x = -1; a.y = -1;
+	point b; b.x = -1; b.y = 1;
+	point c; c.x = 1; c.y = -1;
+	point d; d.x = 1; d.y = 1;
+	// Add points to iteratable
+	point offset [] = {a, b, c, d};
 
-	// Display whos turn it is
-	if(p_turn == 0){
-		cout << "Black Turn";
-	}else{
-		cout << "White Turn";
-	}
-	// Display who is playing (computer/user) && Get input from correct source
-	if(use_ai){
-		cout << " - Computer" << endl;
-		// Get input from AI
-	}else{
-		cout << " - Player" <<endl;
+	for(int i = 0; i < 8; i++){
+		for(auto &j : board[i]){
+			if(j.getPiece() != NULL){
+				if(j.getPiece()->getColour() == p_turn){
+					Piece* p = j.getPiece();
+					point loc = p->getLocation();
 
-		while(true){
-			try{
-				getline(cin, usrInp);
-				if(usrInp == "<"){
-					this->rewindState();
-					this->drawState();
-					break;
-				}else{
-					p_loc = this->parseUsrInput(usrInp);
-					usrInp = "";
-					getline(cin,usrInp);
-					p_dest = this->parseUsrInput(usrInp);
-				}
-				
-			}catch(const exception &ex){
-				cout << ex.what() << endl;
-				continue;
-			}
+					for(auto &off : offset){
+						point offs_loc = loc +off;
 
-			for(auto &m : plMoves){
-				if(p_loc == m->getLocation() && p_dest == m->getDestination()){
-					if(m->getDirection() == "FORWARD" || m->getPiece()->getKing() == true){
-						return m;
-					}else{
-						cout << "Only king pieces can move backwards" << endl; 
+						if(offs_loc > 7 || offs_loc < 0){
+ 							continue;
+ 						}
+
+ 						if(board[offs_loc.y][offs_loc.x].getPiece() == NULL){
+							Move* regMove = new Move(p, loc, offs_loc);
+							if(regMove->getDirection() == "FORWARD" || regMove->getPiece()->getKing() == true){
+								moves.push_back(regMove);
+							}
+						}else{
+							if(board[offs_loc.y][offs_loc.x].getPiece()->getColour() != p_turn){
+								point jmp_offs = loc + (off*2);
+
+								if(jmp_offs > 7 || jmp_offs < 0){
+									continue;
+								}
+								if(board[jmp_offs.y][jmp_offs.x].getPiece() == NULL){
+									// Grab piece to capture
+									Piece* cap = board[offs_loc.y][offs_loc.x].getPiece();
+									// Create new move
+									Move* jmpMove = new Move(p, cap, loc, jmp_offs);
+									if(jmpMove->getDirection() == "FORWARD" || jmpMove->getPiece()->getKing() == true){
+										moves.push_back(jmpMove);
+									}
+								}
+							}
+						}
 					}
 				}
 			}
-			cout << "Not a playable move. Enter a valid move." << endl;
 		}
 	}
+
+	
+	// Filter all moves for jump moves, if jump moves exist, only send the jump moves
+	vector<Move*> j_moves;
+	for(auto &m : moves){
+		if(m->getDistance() == 2 && m->getCapture() != NULL){
+			// Capture move is in the list
+			j_moves.push_back(m);
+		}
+	}
+	// If there's jump moves available return only those, else return regular moves
+	if(j_moves.size() > 0){
+		cout << "There is a capture move available!" << endl;
+		return j_moves;
+	}else{
+		return moves;
+	}
+}
+
+point Game::getUsrInput(){
+	bool isValid = false;
+	string usrIn;
+	string cols = "abcdefgh";
+	point p_pos;
+
+	while(!isValid){
+		getline(cin, usrIn);
+		if(usrIn.size() == 2){
+			if(isalpha(usrIn[0])){
+				char xVal = tolower(usrIn[0], locale());
+				auto xpos = cols.find(xVal);
+				if(xpos != string::npos){
+					p_pos.x = xpos;
+				}else{
+					cout << "Column not found or is out of range." << endl;
+				}
+			}else{
+				cout << "Column value is invalid." << endl;
+			}
+			if(isdigit(usrIn[1])){
+				int val = usrIn[1] - '0';
+				val--;
+				if(val < 0 || val > 7){
+					cout << "Row value is out of range." << endl;
+				}else{
+					p_pos.y = val;
+				}
+			}else{
+				cout << "Row value is invalid." << endl;
+			}
+		}else{
+			cout << "Input shoud be exactly two characters long." << endl;
+		}
+		
+		if(p_pos.x <= 7 && p_pos.x >= 0){
+			if(p_pos.x <= 7 && p_pos.x >= 0){
+				isValid = true;
+			}
+		}
+	}
+	return p_pos;
 }
 
 void Game::playMove(Move* m)
@@ -519,35 +453,55 @@ void Game::playMove(Move* m)
 	point newPos = m->getDestination();
 
 	if(board[newPos.y][newPos.x].getPiece() == NULL){
-
 		board[newPos.y][newPos.x].setPiece(board[curPos.y][curPos.x].getPiece());
 		board[newPos.y][newPos.x].getPiece()->setLocation(m->getDestination());
 		board[curPos.y][curPos.x].setPiece(NULL);
-		if(m->getCapture() != NULL){
+
+		if(m->getCapture() != NULL && m->getDistance() == 2){
 			point capPos = m->getCapture()->getLocation();
 			board[capPos.y][capPos.x].setPiece(NULL);
 			// captured a piece
 		}
-
 		m_history.push_back(m);
 		state_index++;
 
+		// If state index does not match move history, after playing a new move, shrink the move history
+		// This prevents the player from beig able to set an old - possibly invalid - state.
+		if(state_index != m_history.size()){
+			m_history.resize(state_index);
+			cout << "Move History has been clipped as new move has been played." << endl;
+		}
+
+		// Select next player
+		if(p_turn == 0){
+			p_turn = 1;
+		}else{
+			p_turn = 0;
+		}
+		if(gameMode == 2){
+			if(use_ai == false){
+				use_ai = true;
+			}else{
+				use_ai = false;
+			}
+		}
+
 	}else{
+		cout << newPos.x << "," << newPos.y << " is occupied" << endl;
 		throw invalid_argument("Invalid move detected: Destination is occupied");
 	}
-	//detect for more available moves here later
-
-	// Select next player
-	if(p_turn == 0){
-		p_turn = 1;
-	}else{
-		p_turn = 0;
-	}
-	if(gameMode == 2){
-		if(use_ai == false){
-			use_ai = true;
-		}else{
-			use_ai = false;
+	
+	// If this move was a jump move, check for another available jump move
+	if(m->getDistance() == 2 && m->getCapture() != NULL){
+		// Get list of moves, filter for jump moves relating to the current piece
+		vector<Move*> nxt_mv_lst = this->getMoves();
+		for(auto &nxt_m : nxt_mv_lst){
+			if(nxt_m->getDistance() == 2 && nxt_m->getCapture() != NULL){
+				if(nxt_m->getPiece() == m->getPiece()){
+					this->playMove(nxt_m);
+					break;
+				}
+			}
 		}
 	}
 }
@@ -589,45 +543,158 @@ void Game::drawState()
 		cout << "   " << topRow << "\n";
 		cout << " " << i+1 << " " << bottomRow << "\n";
 	}
+	// Display whos turn it is
+	if(p_turn == 0){
+		cout << "Black Turn";
+	}else{
+		cout << "White Turn";
+	}
+	// Display who is playing (computer/user) && Get input from correct source
+	if(use_ai){
+		cout << " - Computer" << endl;
+		// Get input from AI
+	}else{
+		cout << " - Player" <<endl;
+	}
 }
 
 void Game::rewindState()
 {
 	// Check if there's a previous state to rewind to
 	if(state_index > 0){
-		// If so move the relavent piece to the previous location
-		point newPos = m_history[state_index-1]->getLocation();
-		point curPos = m_history[state_index-1]->getDestination();
+		// If so, get previous move information.
 		Move* m = m_history[state_index-1];
+		point newPos = m->getLocation();
+		point curPos = m->getDestination();
+		int pSide = m->getPiece()->getColour();
+
+		// Create new instance of the piece that is to be added
+		Piece* p = new Piece(pSide, newPos);
 
 		// Reinstate board from history
-		board[newPos.y][newPos.x].setPiece(board[curPos.y][curPos.x].getPiece());
-		board[newPos.y][newPos.x].getPiece()->setLocation(m->getDestination());
+		board[newPos.y][newPos.x].setPiece(p);
 		board[curPos.y][curPos.x].setPiece(NULL);
+		cout << "Successfully reinstated board history" << endl;
+
 		// If last move was a capture piece then reinstate the piece in it's location prior to the move.
 		if(m->getCapture() != NULL){
-			// Replace captured piece
+			// Remove captured piece if necessary.
 			point capPos = m->getCapture()->getLocation();
 			board[capPos.y][capPos.x].setPiece(m->getCapture());
 		}
+
+		// Finally, reinstate the player turn information.
+		if(p_turn == 0){
+			p_turn = 1;
+		}else{
+			p_turn = 0;
+		}
+		if(gameMode == 2){
+			if(use_ai == false){
+				use_ai = true;
+			}else{
+				use_ai = false;
+			}
+		}
+		state_index--;
+
 	}else{
 		cout << "No actions to undo" << endl;
 	}
 }
 
-// TEMP - DO NOT DISTRIBUTE
-void Game::testState(){
-	for(int i = 0; i < 8; i++){
-		for(int j = 0; j < 8; j++){
-			cout << i << j << " " << board[i][j].getColour() << endl;
+void Game::redoState(){
+	if(state_index < m_history.size()){
+
+		Move* m = m_history[state_index];
+		point newPos = m->getDestination();
+		point curPos = m->getLocation();
+
+		// Reinstate board from history
+		board[newPos.y][newPos.x].setPiece(board[curPos.y][curPos.x].getPiece());
+		board[newPos.y][newPos.x].getPiece()->setLocation(m->getDestination());
+		board[curPos.y][curPos.x].setPiece(NULL);
+
+		// If next move was a capture piece then remove piece from the board again.
+		if(m->getCapture() != NULL){
+			// Replace captured piece
+			point capPos = m->getCapture()->getLocation();
+			board[capPos.y][capPos.x].setPiece(NULL);
 		}
-	}
-	cout << "<------------>" << endl;
-	for(int i = 0; i < 8; i++){
-		for(int j = 0; j < 8; j++){
-			if(board[i][j].getPiece() != NULL){
-				cout << i << j << " " << board[i][j].getPiece()->getColour() << endl;
+
+		// Finally, reinstate the player turn information.
+		if(p_turn == 0){
+			p_turn = 1;
+		}else{
+			p_turn = 0;
+		}
+		if(gameMode == 2){
+			if(use_ai == false){
+				use_ai = true;
+			}else{
+				use_ai = false;
 			}
 		}
+		state_index++;
+
+	}else{
+		cout << "No actions to redo" << endl;
+	}
+}
+
+// Function to play all the saved moves 
+
+void Game::autoPlay(){
+	// Clear board state
+	board.resize( 0, vector<Position>(0));
+	p_turn = 0;
+	this->initGame();
+	this->drawState();
+	cout << m_history.size() << endl;
+	
+	for(auto &m : m_history){
+		point curPos = m->getLocation();
+		point newPos = m->getDestination();
+		
+		if(board[newPos.y][newPos.x].getPiece() == NULL){
+			board[newPos.y][newPos.x].setPiece(board[curPos.y][curPos.x].getPiece());
+			board[newPos.y][newPos.x].getPiece()->setLocation(m->getDestination());
+			board[curPos.y][curPos.x].setPiece(NULL);
+
+			if(m->getCapture() != NULL && m->getDistance() == 2){
+				point capPos = m->getCapture()->getLocation();
+				board[capPos.y][capPos.x].setPiece(NULL);
+				// captured a piece
+			}
+
+		}else{
+			cout << newPos.x << "," << newPos.y << " is occupied" << endl;
+			throw invalid_argument("Invalid move detected: Destination is occupied");
+		}
+
+		// Select next player
+		if(p_turn == 0){
+			p_turn = 1;
+		}else{
+			p_turn = 0;
+		}
+		if(gameMode == 2){
+			if(use_ai == false){
+				use_ai = true;
+			}else{
+				use_ai = false;
+			}
+		}
+		this->drawState();
+	}
+}
+
+// Function to automatically select a move on the layer's behalf
+void Game::autoSelect(){
+	vector<Move*> allMoves = this->getMoves();
+	if(allMoves.size() > 0){
+		this->playMove(allMoves[0]);
+	}else{
+		cout << "Couldn't select a move as there's no moves available" << endl;
 	}
 }
